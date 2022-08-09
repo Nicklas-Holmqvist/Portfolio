@@ -1,14 +1,13 @@
 import { ImageListItem, useMediaQuery } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { IGalleryImage } from '../../../types';
 
 export const Image = (props: {
   image: IGalleryImage;
   handleModal: (e: any) => void;
+  loadingGallery: () => void;
 }) => {
-  const [loaded, setLoaded] = useState<boolean>(false);
-
   const mediaQueryMobile = useMediaQuery('(min-width:600px)');
   return (
     <>
@@ -23,11 +22,7 @@ export const Image = (props: {
           alt={props.image.title}
           loading="lazy"
           onClick={props.handleModal}
-          onLoad={() => setLoaded(true)}
-          style={{
-            opacity: loaded ? 1 : 0,
-            transition: 'all',
-          }}
+          onLoad={props.loadingGallery}
         />
       </ImageListItem>
     </>

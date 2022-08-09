@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 import { Grid, ImageList, Typography } from '@mui/material';
 
+import '../../styles/gallery.css';
 import getGallery from '../../contentful/getGallery';
 import { Image } from './component';
 import { ImageModal } from '../imageModal';
@@ -19,6 +20,7 @@ import { NoPageFound } from '../noPageFound/NoPageFound';
 import { IGalleryImage, IMeta } from '../../types';
 import { LockRightClick } from '../helpers';
 import { useActiveGalleryContext } from '../../context/activeGallery';
+import Loader from '../Loader';
 
 export const Gallery = () => {
   const context = useActiveGalleryContext();
@@ -27,6 +29,8 @@ export const Gallery = () => {
   const [modalImage, setModalImage] = useState<string>('');
   const [gallery, setGallery] = useState<IGalleryImage[]>([]);
   const [meta, setMeta] = useState<IMeta>();
+  const [loadingImages, setLoadingImages] = useState<number>(0);
+  const [loadedGallery, setLoadedGallery] = useState<boolean>(false);
 
   const mediaQueryMobile = useMediaQuery('(min-width:600px)');
 
@@ -85,6 +89,14 @@ export const Gallery = () => {
     setOpenModal(false);
   };
 
+  const loadingGallery = () => {
+    const galleryImages = gallery.length;
+
+    setLoadingImages(loadingImages + 1);
+    if (galleryImages === loadingImages + 1) setLoadedGallery(true);
+    else setLoadedGallery(false);
+  };
+
   useEffect(() => {
     const getEntries = async () => {
       setGallery([]);
@@ -93,8 +105,11 @@ export const Gallery = () => {
         context.handleActiveLink('');
         return;
       }
+
       setGallery(gallery[0].galleryImages);
       setMeta(gallery[0].meta);
+      setLoadedGallery(false);
+      setLoadingImages(0);
       context.handleActiveLink(gallery[0].path);
     };
     getEntries();
@@ -141,31 +156,41 @@ export const Gallery = () => {
           {gallery.length === 0 ? (
             <></>
           ) : (
-            <ImageList
-              variant="masonry"
-              cols={mediaQueryMobile ? 3 : 1}
-              gap={4}
-            >
-              {gallery.map((image: IGalleryImage, index: number) => (
-                <motion.div
-                  key={index}
-                  variants={imageVariant}
-                  initial="initial"
-                  animate="animate"
-                  transition={{
-                    delay: index * 0.01,
-                    duraction: index * 0.01,
-                  }}
-                  onContextMenu={handleContextMenu}
-                >
-                  <LockRightClick
-                    contextMenu={contextMenu}
-                    handleClose={handleClose}
-                  />
-                  <Image image={image} handleModal={openImageModal} />
-                </motion.div>
-              ))}
-            </ImageList>
+            <>
+              {!loadedGallery && <Loader />}
+              <ImageList
+                variant="masonry"
+                cols={mediaQueryMobile ? 3 : 1}
+                gap={4}
+                sx={{
+                  display: !loadedGallery ? 'none' : 'block',
+                }}
+              >
+                {gallery.map((image: IGalleryImage, index: number) => (
+                  <motion.div
+                    key={index}
+                    variants={imageVariant}
+                    initial="initial"
+                    animate="animate"
+                    transition={{
+                      delay: index * 0.01,
+                      duraction: index * 0.01,
+                    }}
+                    onContextMenu={handleContextMenu}
+                  >
+                    <LockRightClick
+                      contextMenu={contextMenu}
+                      handleClose={handleClose}
+                    />
+                    <Image
+                      image={image}
+                      handleModal={openImageModal}
+                      loadingGallery={loadingGallery}
+                    />
+                  </motion.div>
+                ))}
+              </ImageList>
+            </>
           )}
         </Grid>
       )}
