@@ -1,0 +1,7 @@
+.hideGallery {
+    display: none;
+}
+
+.showGallery {
+    display: block;
+}
